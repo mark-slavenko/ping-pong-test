@@ -11,7 +11,7 @@ export class RedisService {
 
     const messageId = await this.redis.xadd(
       streamKey,
-      'MAXLEN', '~', 100,
+      'MAXLEN', '~', 1000,
       '*',
       'clientId', clientId,
       'message', 'ping'

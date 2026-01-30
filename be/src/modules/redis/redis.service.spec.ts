@@ -47,7 +47,7 @@ describe('RedisService', () => {
         'ping_stream',
         'MAXLEN',
         '~',
-        100,
+        1000,
         '*',
         'clientId',
         clientId,
