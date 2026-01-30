@@ -10,3 +10,35 @@ services:
       timeout: 3s
       retries: 5
     restart: always
+    networks:
+      - ping-pong-net
+
+  backend:
+    build:
+      context: ./be
+      dockerfile: Dockerfile
+    container_name: ping_pong_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - ping-pong-net
+
+  frontend:
+    build:
+      context: ./fe
+      dockerfile: Dockerfile
+    container_name: ping_pong_frontend
+    ports:
+      - "8080:80"
+    networks:
+      - ping-pong-net
+
+networks:
+  ping-pong-net:
+    driver: bridge
