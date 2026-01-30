@@ -14,9 +14,15 @@ import { RedisConsumerService } from './redis-consumer.service';
     {
       provide: 'REDIS_CLIENT',
       useFactory: (configService: ConfigService) => {
+        const logger = new Logger('RedisClient');
         return new Redis({
           host: configService.get<string>('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT'),
+          retryStrategy: (times) => {
+            const delay = Math.min(times * 50, 2000);
+            logger.warn(`Redis connection lost. Retrying in ${delay}ms... (Attempt ${times})`);
+            return delay;
+          },
         });
       },
       inject: [ConfigService],
@@ -24,9 +30,15 @@ import { RedisConsumerService } from './redis-consumer.service';
     {
       provide: 'REDIS_SUBSCRIBER',
       useFactory: (configService: ConfigService) => {
+        const logger = new Logger('RedisSubscriber');
         return new Redis({
           host: configService.get<string>('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT'),
+          retryStrategy: (times) => {
+            const delay = Math.min(times * 50, 2000);
+            logger.warn(`Redis subscriber lost. Retrying in ${delay}ms... (Attempt ${times})`);
+            return delay;
+          },
         });
       },
       inject: [ConfigService],
