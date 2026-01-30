@@ -1,8 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
 export class RedisService {
+  private readonly logger = new Logger(RedisService.name);
   constructor(@Inject('REDIS_CLIENT') private readonly redis: Redis) {}
 
   async addPingRequest(clientId: string): Promise<string | null> {
@@ -15,7 +16,7 @@ export class RedisService {
       'message', 'ping'
     );
 
-    console.log(`[Redis Producer] Added message ${messageId} from client ${clientId}`);
+    this.logger.log(`Ping request added to stream. ID: ${messageId}, Client: ${clientId}`);
     return messageId;
   }
 }

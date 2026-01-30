@@ -96,3 +96,17 @@ Response:
   "info": "Request queued"
 }
 ```
+
+## ⚠️ Implementation Notes & Trade-offs
+
+### Message Persistence (XREAD vs XGROUP)
+For this baseline implementation, I utilized `XREAD` with the special ID `$` (read new messages only).
+**Trade-off:** If the backend service restarts, messages arriving during the downtime will be skipped.
+**Production Improvement:** In a real-world scenario, I would implement **Redis Consumer Groups (`XGROUP`)**. This would allow the service to:
+1. Track the `last_delivered_id` persistently.
+2. Resume processing from where it left off after a restart.
+3. Scale horizontal workers (load balancing) without processing duplicate messages.
+
+### Error Handling
+* **Global Exception Filter**: Added to ensure consistent JSON error responses for the REST API.
+* **Graceful Shutdown**: Implemented `OnModuleDestroy` to close Redis connections cleanly, preventing zombie connections on the Redis server.

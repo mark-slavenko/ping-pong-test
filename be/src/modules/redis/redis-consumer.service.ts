@@ -1,10 +1,12 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import Redis from 'ioredis';
 
 import { PingGateway } from './ping.gateway';
 
 @Injectable()
 export class RedisConsumerService implements OnModuleInit {
+  private readonly logger = new Logger(RedisConsumerService.name);
+
   constructor(
     @Inject('REDIS_SUBSCRIBER') private readonly redis: Redis,
     private readonly pingGateway: PingGateway,
@@ -18,7 +20,7 @@ export class RedisConsumerService implements OnModuleInit {
     const streamKey = 'ping_stream';
     let lastId = '$'; // only new messages
 
-    console.log('Started listening to Redis Stream...');
+    this.logger.log('Started listening to Redis Stream (Subscriber Connection)...');
 
     while (true) {
       try {
@@ -39,7 +41,7 @@ export class RedisConsumerService implements OnModuleInit {
 
             const parsedBody = this.parseMessage(messageBody);
 
-            console.log(`[Consumer] Processing: ${messageId}`, parsedBody);
+            this.logger.log(`Processing message: ${messageId} from ${parsedBody.clientId}`);
 
             const pongPayload = {
               originalMessageId: messageId,
@@ -55,7 +57,7 @@ export class RedisConsumerService implements OnModuleInit {
           }
         }
       } catch (error) {
-        console.error('Error reading from Redis Stream:', error);
+        this.logger.error('Error reading from Redis Stream', error.stack);
         // Wait a bit before retrying to avoid crash loops
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }

@@ -1,4 +1,4 @@
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, Inject, OnModuleDestroy, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
@@ -37,4 +37,18 @@ import { RedisConsumerService } from './redis-consumer.service';
   ],
   exports: ['REDIS_CLIENT', RedisService],
 })
-export class RedisModule {}
+export class RedisModule implements OnModuleDestroy {
+  private readonly logger = new Logger(RedisModule.name);
+
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
+    @Inject('REDIS_SUBSCRIBER') private readonly redisSubscriber: Redis,
+  ) {}
+
+  async onModuleDestroy() {
+    // Gracefully close connections when the app stops
+    await this.redisClient.quit();
+    await this.redisSubscriber.quit();
+    this.logger.log('Redis connections closed.');
+  }
+}
